@@ -4,22 +4,69 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TypeScript HTML App</title>
-  <style>
-    html, body {
-        margin: 0;
-        overflow: hidden;
+  <script>
+    //this is just me begin lazy lol
+    function show(elementId){
+      document.getElementById(elementId).style.display = "block"
     }
-    canvas {
-        width: 100vw;
-        height: 100vh;
-        display: block;
+    function hide(elementId){
+      document.getElementById(elementId).style.display = "none"
     }
-  </style>
+    function changeLan(event){
+      var lan = event.srcElement.innerText;
+      if (lan == "CH"){
+        lan = "zh_hant"
+      }
+      const params = new URLSearchParams(window.location.search);
+      params.set("lan", lan);
+      window.location.replace("?"+params)
+    }
+
+  </script>
+  <link rel="stylesheet" href="./src/style.css">
+  <link rel="stylesheet" href="./src/star.css">
+
   <!-- Live2DCubismCore script -->
   <script src = "./Core/live2dcubismcore.js"></script>
   <!-- Build script -->
   <script src = "./src/main.ts" type="module"></script>
 </head>
 <body>
+  <img id="storyselector" src="./public/Resources/book-solid.svg" class="icons">
+  <div id="storyselectorcontainer" class="prompt"></div>
+  <img id="languageselector" src="./public/Resources/earth-asia-solid.svg" class="icons" onclick="show('languageselection')">
+  <div id="languageselection" class="prompt">
+    <p>Language</p>
+    <ul>
+
+        <li><span onclick="changeLan(event)">EN</span></li>
+        <li><span onclick="changeLan(event)">JA</span></li>
+        <li><span onclick="changeLan(event)">KO</span></li>
+        <li><span onclick="changeLan(event)">CH</span></li>
+
+      </ul>
+  </div>
+  <div id="textboxcontainer">
+
+    <div id="textbox">
+      <span id="text"></span>
+      <div id="nameContainer">
+        <div id="nameBox">
+          <div class="star">
+            <div class="arc-top"></div>
+            <div></div>
+            <div class="arc-bottom"></div>
+          </div>
+          <span id="nameText">Karen</span>
+        </div>
+        <div id="colourBox"></div>
+      </div>
+    </div>
+  </div>
+  <div id="fade"></div>
+  <div class="centre" id="titleContainer">
+    <img id="title"  class="centre" src="./Resources/title.png">
+    <span id="titleText" class="centre"></span>
+  </div>
 </body>
 </html>

@@ -41,7 +41,7 @@ import { frameBuffer, LAppDelegate } from './lappdelegate';
 import { canvas, gl } from './lappglmanager';
 import { LAppPal } from './lapppal';
 import { TextureInfo } from './lapptexturemanager';
-import { LAppWavFileHandler } from './lappwavfilehandler';
+import { LAppAudioHandler } from './lappaudiofilehandler';
 import { CubismMoc } from '@framework/model/cubismmoc';
 
 enum LoadStep {
@@ -203,6 +203,7 @@ export class LAppModel extends CubismUserModel {
     // Physics
     const loadCubismPhysics = (): void => {
       if (this._modelSetting.getPhysicsFileName() != '') {
+
         const physicsFileName = this._modelSetting.getPhysicsFileName();
 
         fetch(`${this._modelHomeDir}${physicsFileName}`)
@@ -511,10 +512,10 @@ export class LAppModel extends CubismUserModel {
     this._model.loadParameters(); // 前回セーブされた状態をロード
     if (this._motionManager.isFinished()) {
       // モーションの再生がない場合、待機モーションの中からランダムで再生する
-      this.startRandomMotion(
-        LAppDefine.MotionGroupIdle,
-        LAppDefine.PriorityIdle
-      );
+      //this.startRandomMotion(
+      //  LAppDefine.MotionGroupIdle,
+      //  LAppDefine.PriorityIdle
+      //);
     } else {
       motionUpdated = this._motionManager.updateMotion(
         this._model,
@@ -607,8 +608,14 @@ export class LAppModel extends CubismUserModel {
       }
       return InvalidMotionQueueEntryHandleValue;
     }
-
-    const motionFileName = this._modelSetting.getMotionFileName(group, no);
+    var motionFileName : string;
+    try{
+      motionFileName = this._modelSetting.getMotionFileName(group, no);
+    }
+    catch{
+      console.log("Failed to get motion file: " + group)
+      return;
+    }
 
     // ex) idle_0
     const name = `${group}_${no}`;
@@ -661,11 +668,12 @@ export class LAppModel extends CubismUserModel {
     }
 
     //voice
+    // TO BE UPDATED
     const voice = this._modelSetting.getMotionSoundFileName(group, no);
     if (voice.localeCompare('') != 0) {
       let path = voice;
       path = this._modelHomeDir + path;
-      this._wavFileHandler.start(path);
+     // this._wavFileHandler.start(path);
     }
 
     if (this._debugMode) {
@@ -690,22 +698,39 @@ export class LAppModel extends CubismUserModel {
     priority: number,
     onFinishedMotionHandler?: FinishedMotionCallback
   ): CubismMotionQueueEntryHandle {
-    if (this._modelSetting.getMotionCount(group) == 0) {
+
+    if (this._modelSetting.getMotionGroupCount() == 0) {
       return InvalidMotionQueueEntryHandleValue;
     }
 
     const no: number = Math.floor(
-      Math.random() * this._modelSetting.getMotionCount(group)
+      Math.random() * this._modelSetting.getMotionGroupCount()
     );
-
-    return this.startMotion(group, no, priority, onFinishedMotionHandler);
+    console.log(this._modelSetting.getMotionGroupName(no))
+    return this.startMotion(this._modelSetting.getMotionGroupName(no), 0, priority, onFinishedMotionHandler);
   }
 
   /**
    * 引数で指定した表情モーションをセットする
    *
-   * @param expressionId 表情モーションのID
+   * @param expressionName 表情モーションのID
    */
+  public setCommandExpression(expressionName : string) : void{
+      expressionName = expressionName.toLowerCase()
+      const expressionList = this._expressions._keyValues;
+      for (let index = 0; index < this._expressions.getSize(); index++) {
+        if(expressionList[index].first.toLowerCase().split(".")[0] == expressionName ){
+
+          this._expressionManager.startMotionPriority(
+
+            expressionList[index].second,
+            false,
+            LAppDefine.PriorityForce
+          );
+          break
+        }
+      }
+  }
   public setExpression(expressionId: string): void {
     const motion: ACubismMotion = this._expressions.getValue(expressionId);
 
@@ -760,7 +785,7 @@ export class LAppModel extends CubismUserModel {
    * @param x             判定を行うX座標
    * @param y             判定を行うY座標
    */
-  public hitTest(hitArenaName: string, x: number, y: number): boolean {
+  public hitTest(hitArenaName: Array<string>, x: number, y: number): boolean {
     // 透明時は当たり判定無し。
     if (this._opacity < 1) {
       return false;
@@ -769,9 +794,11 @@ export class LAppModel extends CubismUserModel {
     const count: number = this._modelSetting.getHitAreasCount();
 
     for (let i = 0; i < count; i++) {
-      if (this._modelSetting.getHitAreaName(i) == hitArenaName) {
+      if (hitArenaName.includes(this._modelSetting.getHitAreaId(i).getString().s)) {
         const drawId: CubismIdHandle = this._modelSetting.getHitAreaId(i);
-        return this.isHit(drawId, x, y);
+        if( this.isHit(drawId, x, y)){
+          return true;
+        };
       }
     }
 
@@ -888,7 +915,7 @@ export class LAppModel extends CubismUserModel {
    * モデルを描画する処理。モデルを描画する空間のView-Projection行列を渡す。
    */
   public draw(matrix: CubismMatrix44): void {
-    if (this._model == null) {
+    if (this._model == null || this._hidden) {
       return;
     }
 
@@ -931,7 +958,8 @@ export class LAppModel extends CubismUserModel {
    */
   public constructor() {
     super();
-
+    this._hidden = false;
+    this._position = null;
     this._modelSetting = null;
     this._modelHomeDir = null;
     this._userTimeSeconds = 0.0;
@@ -973,10 +1001,12 @@ export class LAppModel extends CubismUserModel {
     this._textureCount = 0;
     this._motionCount = 0;
     this._allMotionCount = 0;
-    this._wavFileHandler = new LAppWavFileHandler();
+    this._wavFileHandler = new LAppAudioHandler();
     this._consistency = false;
   }
 
+  _hidden: boolean;
+  _position: number;
   _modelSetting: ICubismModelSetting; // モデルセッティング情報
   _modelHomeDir: string; // モデルセッティングが置かれたディレクトリ
   _userTimeSeconds: number; // デルタ時間の積算値[秒]
@@ -1002,6 +1032,6 @@ export class LAppModel extends CubismUserModel {
   _textureCount: number; // テクスチャカウント
   _motionCount: number; // モーションデータカウント
   _allMotionCount: number; // モーション総数
-  _wavFileHandler: LAppWavFileHandler; //wavファイルハンドラ
+  _wavFileHandler: LAppAudioHandler; //wavファイルハンドラ
   _consistency: boolean; // MOC3一貫性チェック管理用
 }

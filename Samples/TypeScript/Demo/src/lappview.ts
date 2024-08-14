@@ -13,9 +13,12 @@ import { LAppDelegate } from './lappdelegate';
 import { canvas, gl } from './lappglmanager';
 import { LAppLive2DManager } from './lapplive2dmanager';
 import { LAppPal } from './lapppal';
-import { LAppSprite } from './lappsprite';
+import { LAppSprite, LAppSpriteContainer, Position } from './lappsprite';
 import { TextureInfo } from './lapptexturemanager';
 import { TouchManager } from './touchmanager';
+import { formatPostcssSourceMap } from 'vite';
+import { l } from 'vite/dist/node/types.d-FdqQ54oU';
+import { CubismMotionSegmentType } from '@framework/motion/cubismmotioninternal';
 
 /**
  * 描画クラス。
@@ -25,9 +28,28 @@ export class LAppView {
    * コンストラクタ
    */
   constructor() {
+
     this._programId = null;
-    this._back = null;
-    this._gear = null;
+    const getBackSize = (textureInfo: TextureInfo): Position => {
+      const width = canvas.width;
+      const height = canvas.height;
+      const x: number = width * 0.5;
+      const y: number = height * 0.5;
+      //4:3
+      if(width*0.75 > height){
+        return new Position(x, y, width, width*0.75);
+      }
+      else{
+        return new Position(x, y, height*1.25, height);
+      }
+
+    };
+    this._back = new LAppSpriteContainer(getBackSize, LAppDefine.ResourcesPath + LAppDefine.BackgroundsDir);
+    this._back._itemId = 0;
+    this._cg = new LAppSpriteContainer(getBackSize, LAppDefine.ResourcesPath + LAppDefine.CgDir);
+    this._cg._visible = false;
+    this._sprites = new Array<LAppSpriteContainer>();
+    //this._languageSelector = null;
 
     // タッチ関係のイベント管理
     this._touchManager = new TouchManager();
@@ -75,6 +97,8 @@ export class LAppView {
       LAppDefine.ViewLogicalMaxBottom,
       LAppDefine.ViewLogicalMaxTop
     );
+
+
   }
 
   /**
@@ -85,12 +109,16 @@ export class LAppView {
     this._touchManager = null;
     this._deviceToScreen = null;
 
-    this._gear.release();
-    this._gear = null;
-
-    this._back.release();
+    this._cg._sprite.release();
+    this._cg = null;
+    this._back._sprite.release();
     this._back = null;
 
+    for (let i = 0; i  < this._sprites.length; i++) {
+      this._sprites[i]._sprite.release() ;
+      this._sprites[i] = null;
+
+    }
     gl.deleteProgram(this._programId);
     this._programId = null;
   }
@@ -99,24 +127,148 @@ export class LAppView {
    * 描画する。
    */
   public render(): void {
-    gl.useProgram(this._programId);
-
-    if (this._back) {
-      this._back.render(this._programId);
-    }
-    if (this._gear) {
-      this._gear.render(this._programId);
-    }
-
-    gl.flush();
 
     const live2DManager: LAppLive2DManager = LAppLive2DManager.getInstance();
 
     live2DManager.setViewMatrix(this._viewMatrix);
 
-    live2DManager.onUpdate();
-  }
+    gl.useProgram(this._programId);
+    if(!this._back){
+      this.changeBackground(0);
+    }
+    if (this._back._sprite && this._back._visible) {
+      this._back._sprite.render(this._programId);
+    }
+    if (this._cg._sprite && this._cg._visible){
+      this._cg._sprite.render(this._programId);
+    }
 
+    this._sprites.forEach(sprite => {
+      if(sprite._sprite && sprite._visible)
+        sprite._sprite.render(this._programId);
+    });
+
+    gl.flush();
+
+
+    live2DManager.onUpdate();
+
+  }
+  public clearCg(){
+    this._cg._visible = false;
+  }
+  public hideBackground(){
+    if(this._back._sprite){
+      this._back._visible = false;
+    }
+  }
+  public changeBackground(background: number){
+      this._back._itemId = background;
+      this._back._visible = true;
+      this._back.generateSprite();
+      /*if (background == null) return;
+      const textureManager = LAppDelegate.getInstance().getTextureManager();
+      const resourcesPath = LAppDefine.ResourcesPath;
+      const imageName = LAppDefine.BackgroundsDir;
+      const width: number = canvas.width;
+      const height: number = canvas.height;
+      // 非同期なのでコールバック関数を作成
+      //const initBackGroundTexture = (textureInfo: TextureInfo): void => {
+      /* const x: number = width * 0.5;
+        const y: number = height * 0.5;
+        //4:3
+        if(width*0.75 > height){
+          this._back = new LAppSprite(x, y, width, width*0.75, textureInfo.id, background);
+        }
+        else{
+          this._back = new LAppSprite(x, y, height*1.25, height, textureInfo.id, background);
+        }
+
+      };
+
+    textureManager.createTextureFromPngFile(
+      resourcesPath + imageName + background.toString()+ ".png",
+      false,
+      initBackGroundTexture
+    );*/
+
+
+  }
+  public changeCg(cg: number){
+    this._cg._itemId = cg;
+    this._cg._visible = true;
+    this._cg.generateSprite();
+    /*if (cg == null) return;
+    const textureManager = LAppDelegate.getInstance().getTextureManager();
+    const resourcesPath = LAppDefine.ResourcesPath;
+    const imageName = LAppDefine.CgDir;
+    const width: number = canvas.width;
+    const height: number = canvas.height;
+    // 非同期なのでコールバック関数を作成
+    const initCgTexture = (textureInfo: TextureInfo): void => {
+      const x: number = width * 0.5;
+      const y: number = height * 0.5;
+      //4:3
+      if(width*0.75 > height){
+        this._cg = new LAppSprite(x, y, width, width*0.75, textureInfo.id, cg);
+      }
+      else{
+        this._cg = new LAppSprite(x, y, height*1.25, height, textureInfo.id, cg);
+      }
+      this._cg._visible = false;
+    };
+
+  textureManager.createTextureFromPngFile(
+    resourcesPath + imageName + cg.toString()+ ".png",
+    false,
+    initCgTexture
+  );*/
+
+}
+/**
+ * addSprite
+ */
+public addSprite( sprite :number) {
+    for (let index = 0; index < this._sprites.length; index++) {
+      const element = this._sprites[index];
+      if(element._itemId == sprite){
+        this._sprites[index]._visible = true;
+        element.generateSprite();
+        return;
+      }
+    }
+    const spriteSize = (textureInfo: TextureInfo): Position => {
+      const width = canvas.width;
+      const height = canvas.height * 0.9;
+      const imgHeight  =textureInfo.img.naturalHeight;
+      const imgWidth =textureInfo.img.naturalWidth;
+      const ratio:number = imgHeight > imgWidth ? imgWidth/imgHeight : imgHeight/imgWidth;
+      return new Position(width * 0.5, height*0.5, height*ratio, height);
+
+    };
+    const newSprite =  new LAppSpriteContainer(spriteSize, LAppDefine.ResourcesPath + LAppDefine.SpritesDir);
+    newSprite._itemId = sprite;
+    newSprite._visible = false;
+    newSprite.generateSprite();
+    this._sprites.push(newSprite);
+    /*const width: number = canvas.width;
+    const height: number = canvas.height;
+    const textureManager = LAppDelegate.getInstance().getTextureManager();
+    const resourcesPath = LAppDefine.ResourcesPath;
+    const spritePath = LAppDefine.SpritesDir;
+    const initSprite = (textureInfo: TextureInfo): void => {
+      const x: number = width * 0.5;
+      const y: number = height * 0.5;
+      //4:3
+
+      this._sprites.push(new LAppSprite(x, y, textureInfo.img.naturalWidth, textureInfo.img.naturalHeight, textureInfo.id) )
+    };
+    textureManager.createTextureFromPngFile(
+      resourcesPath + spritePath + sprite.toString()+ ".png",
+      false,
+      initSprite
+    );*/
+}
   /**
    * 画像の初期化を行う。
    */
@@ -129,46 +281,17 @@ export class LAppView {
 
     let imageName = '';
 
-    // 背景画像初期化
-    imageName = LAppDefine.BackImageName;
-
-    // 非同期なのでコールバック関数を作成
-    const initBackGroundTexture = (textureInfo: TextureInfo): void => {
-      const x: number = width * 0.5;
-      const y: number = height * 0.5;
-
-      const fwidth = textureInfo.width * 2.0;
-      const fheight = height * 0.95;
-      this._back = new LAppSprite(x, y, fwidth, fheight, textureInfo.id);
-    };
-
-    textureManager.createTextureFromPngFile(
-      resourcesPath + imageName,
-      false,
-      initBackGroundTexture
-    );
-
-    // 歯車画像初期化
-    imageName = LAppDefine.GearImageName;
-    const initGearTexture = (textureInfo: TextureInfo): void => {
-      const x = width - textureInfo.width * 0.5;
-      const y = height - textureInfo.height * 0.5;
-      const fwidth = textureInfo.width;
-      const fheight = textureInfo.height;
-      this._gear = new LAppSprite(x, y, fwidth, fheight, textureInfo.id);
-    };
-
-    textureManager.createTextureFromPngFile(
-      resourcesPath + imageName,
-      false,
-      initGearTexture
-    );
-
+    this._back.generateSprite();
+    this._cg.generateSprite();
+    this._sprites.forEach(element => {
+      element.generateSprite();
+    });
     // シェーダーを作成
     if (this._programId == null) {
       this._programId = LAppDelegate.getInstance().createShader();
     }
   }
+
 
   /**
    * タッチされた時に呼ばれる。
@@ -228,14 +351,14 @@ export class LAppView {
       live2DManager.onTap(x, y);
 
       // 歯車にタップしたか
-      if (
-        this._gear.isHit(
-          pointX * window.devicePixelRatio,
-          pointY * window.devicePixelRatio
-        )
-      ) {
-        live2DManager.nextScene();
-      }
+      //if (
+      //  this._languageSelector.isHit(
+      //    pointX * window.devicePixelRatio,
+      //    pointY * window.devicePixelRatio
+      //  )
+      //) {
+      //  live2DManager.changeLanguage();
+      // }
     }
   }
 
@@ -280,8 +403,11 @@ export class LAppView {
   _deviceToScreen: CubismMatrix44; // デバイスからスクリーンへの行列
   _viewMatrix: CubismViewMatrix; // viewMatrix
   _programId: WebGLProgram; // シェーダID
-  _back: LAppSprite; // 背景画像
-  _gear: LAppSprite; // ギア画像
+  _back: LAppSpriteContainer; // 背景画像
+  _cg: LAppSpriteContainer;
+  _sprites: Array<LAppSpriteContainer>;
+  //_languageSelector: LAppSprite; // 背景画像
   _changeModel: boolean; // モデル切り替えフラグ
   _isClick: boolean; // クリック中
+
 }

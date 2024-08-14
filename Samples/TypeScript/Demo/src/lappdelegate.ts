@@ -13,6 +13,7 @@ import { LAppPal } from './lapppal';
 import { LAppTextureManager } from './lapptexturemanager';
 import { LAppView } from './lappview';
 import { canvas, gl } from './lappglmanager';
+import { LAppPrompt } from './lapphtmlcontrollers';
 
 export let s_instance: LAppDelegate = null;
 export let frameBuffer: WebGLFramebuffer = null;
@@ -70,20 +71,27 @@ export class LAppDelegate {
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
     const supportTouch: boolean = 'ontouchend' in canvas;
-
+    const textBoxContainer = document.getElementById("textboxcontainer");
     if (supportTouch) {
       // タッチ関連コールバック関数登録
       canvas.addEventListener('touchstart', onTouchBegan, { passive: true });
       canvas.addEventListener('touchmove', onTouchMoved, { passive: true });
       canvas.addEventListener('touchend', onTouchEnded, { passive: true });
       canvas.addEventListener('touchcancel', onTouchCancel, { passive: true });
+      textBoxContainer.addEventListener('touchstart', onTouchBegan, { passive: true });
+      textBoxContainer.addEventListener('touchmove', onTouchMoved, { passive: true });
+      textBoxContainer.addEventListener('touchend', onTouchEnded, { passive: true });
+      textBoxContainer.addEventListener('touchcancel', onTouchCancel, { passive: true });
     } else {
       // マウス関連コールバック関数登録
       canvas.addEventListener('mousedown', onClickBegan, { passive: true });
       canvas.addEventListener('mousemove', onMouseMoved, { passive: true });
       canvas.addEventListener('mouseup', onClickEnded, { passive: true });
+      textBoxContainer.addEventListener('mousedown', onClickBegan, { passive: true });
+      textBoxContainer.addEventListener('mousemove', onMouseMoved, { passive: true });
+      textBoxContainer.addEventListener('mouseup', onClickEnded, { passive: true });
     }
-
+    new LAppPrompt("languageselection", "languageselector");
     // AppViewの初期化
     this._view.initialize();
 

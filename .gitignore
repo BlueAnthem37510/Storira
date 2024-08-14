@@ -1,6 +1,8 @@
 # Core directory files
-/Core/**/.js
-/Core/**/.ts
+Core/
+Samples/Resources/voice/*
+Samples/Resources/models/*
+Samples/TypeScript/Demo/dist/*
 # Package files
 node_modules/
 # Build files
@@ -18,3 +20,5 @@ temp/
 !/.vscode/launch.json
 !/.vscode/settings.json
 !/.vscode/tasks.json
+
+Samples/Resources/backgrounds.py

@@ -8,6 +8,8 @@
 import { LAppDelegate } from './lappdelegate';
 import * as LAppDefine from './lappdefine';
 import { LAppGlManager } from './lappglmanager';
+import { LAppStorySelector } from './lappstoryselector';
+
 
 /**
  * ブラウザロード後の処理
@@ -24,6 +26,7 @@ window.addEventListener(
     }
 
     LAppDelegate.getInstance().run();
+    LAppStorySelector.getInstance(); //initialise
   },
   { passive: true }
 );

@@ -6,6 +6,8 @@
  */
 
 import { canvas, gl } from './lappglmanager';
+import { TextureInfo } from './lapptexturemanager';
+import { LAppDelegate } from './lappdelegate';
 
 /**
  * スプライトを実装するクラス
@@ -214,4 +216,55 @@ export class Rect {
   public right: number; // 右辺
   public up: number; // 上辺
   public down: number; // 下辺
+}
+
+export class Position {
+  public x: number; // 左辺
+  public y: number; // 右辺
+  public width: number; // 上辺
+  public height: number; // 下辺
+  constructor(x:number, y:number, width:number, height:number){
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+  }
+}
+export type PositionSizer = (textureInfo : TextureInfo) => Position;
+export class LAppSpriteContainer{
+    _visible:boolean;
+    _itemId:number;
+    _path:string;
+    _positionInfo:PositionSizer;
+    _sprite:LAppSprite;
+    _textureInfo:TextureInfo;
+    constructor(generator : PositionSizer, path:string){
+      this._positionInfo = generator;
+      this._itemId = null;
+      this._visible = true;
+      this._sprite =  null;
+      this._path = path;
+
+    }
+    public show(){
+      this._visible = true;
+      this.generateSprite();
+    }
+    public generateSprite(){
+      if(this._itemId == null || this._visible == false) return;
+      const textureManager = LAppDelegate.getInstance().getTextureManager();
+
+      const callback = (textureInfo : TextureInfo) => {
+        const positionInfo = this._positionInfo(textureInfo);
+        this._sprite = new LAppSprite(positionInfo.x, positionInfo.y, positionInfo.width, positionInfo.height,textureInfo.id);
+      };
+
+      textureManager.createTextureFromPngFile(
+        this._path+ this._itemId.toString()+ ".png",
+        false,
+        callback
+      );
+
+    }
+
 }

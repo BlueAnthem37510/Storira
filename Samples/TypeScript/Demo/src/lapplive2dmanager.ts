@@ -9,10 +9,16 @@ import { CubismMatrix44 } from '@framework/math/cubismmatrix44';
 import { ACubismMotion } from '@framework/motion/acubismmotion';
 import { csmVector } from '@framework/type/csmvector';
 
+
 import * as LAppDefine from './lappdefine';
 import { canvas } from './lappglmanager';
 import { LAppModel } from './lappmodel';
 import { LAppPal } from './lapppal';
+import { LAppNames, LAppScript, LAppStory } from './lappstory';
+import { strtod } from '@framework/live2dcubismframework';
+import { CubismPhysicsSource } from '@framework/physics/cubismphysicsinternal';
+import { LAppAudioController, LAppFade, LAppTextBox, LAppTitle } from './lapphtmlcontrollers';
+import { LAppDelegate } from './lappdelegate';
 
 export let s_instance: LAppLive2DManager = null;
 
@@ -88,42 +94,41 @@ export class LAppLive2DManager {
     }
   }
 
-  /**
-   * 画面をタップした時の処理
-   *
-   * @param x 画面のX座標
-   * @param y 画面のY座標
-   */
-  public onTap(x: number, y: number): void {
-    if (LAppDefine.DebugLogEnable) {
-      LAppPal.printMessage(
-        `[APP]tap point: {x: ${x.toFixed(2)} y: ${y.toFixed(2)}}`
-      );
-    }
 
-    for (let i = 0; i < this._models.getSize(); i++) {
-      if (this._models.at(i).hitTest(LAppDefine.HitAreaNameHead, x, y)) {
-        if (LAppDefine.DebugLogEnable) {
-          LAppPal.printMessage(
-            `[APP]hit area: [${LAppDefine.HitAreaNameHead}]`
-          );
-        }
-        this._models.at(i).setRandomExpression();
-      } else if (this._models.at(i).hitTest(LAppDefine.HitAreaNameBody, x, y)) {
-        if (LAppDefine.DebugLogEnable) {
-          LAppPal.printMessage(
-            `[APP]hit area: [${LAppDefine.HitAreaNameBody}]`
-          );
-        }
-        this._models
-          .at(i)
-          .startRandomMotion(
-            LAppDefine.MotionGroupTapBody,
-            LAppDefine.PriorityNormal,
-            this._finishedMotion
-          );
+  public backGroundCommand(script: LAppScript) {
+    this._story.getBackgrounds().then(backgrounds => {
+      this._background = backgrounds[script.getBackgroundId()]
+    })
+    this._story._index += 1;
+
+  }
+
+  public waitCommand(script: LAppScript) {
+    this._story._waiting = true;
+    //console.log("waiting...")
+    setTimeout(() => {
+      if (this._story._waiting) {
+
+        this._story._waiting = false;
+        //console.log("Waited!")
       }
-    }
+    }, script.getTime());
+
+  }
+  public titleCommand(script: LAppScript) {
+
+    this._title.display(script.getMessage(this._story._language));
+    this._story._index += 1;
+
+    return;
+  }
+
+
+  public onTap(x: number, y: number): void {
+    if (this._story == null) return;
+    if (!this._story._waiting) this._story.runScript();
+
+
   }
 
   /**
@@ -137,15 +142,24 @@ export class LAppLive2DManager {
 
     for (let i = 0; i < modelCount; ++i) {
       const projection: CubismMatrix44 = new CubismMatrix44();
+
       const model: LAppModel = this.getModel(i);
 
       if (model.getModel()) {
         if (model.getModel().getCanvasWidth() > 1.0 && width < height) {
           // 横に長いモデルを縦長ウィンドウに表示する際モデルの横サイズでscaleを算出する
-          model.getModelMatrix().setWidth(2.0);
-          projection.scale(1.0, width / height);
+          model.getModelMatrix().setWidth(5.0);
+          projection.scale(LAppDefine.ModelScale, (width / height) * LAppDefine.ModelScale);
         } else {
-          projection.scale(height / width, 1.0);
+          projection.scale((height / width) * LAppDefine.ModelScale, LAppDefine.ModelScale);
+        }
+        model.getModelMatrix().centerY(LAppDefine.YPosition);
+
+        if (model._position == null) {
+          model.getModelMatrix().centerX(1)
+        }
+        else {
+          model.getModelMatrix().centerX(0.5*model._position -0.5)
         }
 
         // 必要があればここで乗算
@@ -163,32 +177,58 @@ export class LAppLive2DManager {
    * 次のシーンに切りかえる
    * サンプルアプリケーションではモデルセットの切り替えを行う。
    */
-  public nextScene(): void {
-    const no: number = (this._sceneIndex + 1) % LAppDefine.ModelDirSize;
-    this.changeScene(no);
+  public reset() {
+    this._story._index = 1
+    for (let index = 0; index < this._models._size; index++) {
+      this._models.at(index)._hidden = true;
+    }
+    this._voice.pause();
+    this._music.pause();
+    this._background = 0;
+    this._textbox.clear();
+    this._textbox.hide();
+    this._fade.hide();
+
+  }
+  public changeLanguage(): void {
+    const languageList = Object.values(LAppDefine.Languages)
+    this._languageIndex = (this._languageIndex + 1) % languageList.length;
+    const language = languageList[this._languageIndex]
+    this._story.changeLanguage(language)
+    this.reset();
+    console.log("Language changed to: " + language)
   }
 
   /**
    * シーンを切り替える
    * サンプルアプリケーションではモデルセットの切り替えを行う。
    */
-  public changeScene(index: number): void {
-    this._sceneIndex = index;
+  public changeScene(name: string): void {
+
     if (LAppDefine.DebugLogEnable) {
-      LAppPal.printMessage(`[APP]model index: ${this._sceneIndex}`);
+      LAppPal.printMessage(`[APP]model: ${name}`);
     }
 
     // ModelDir[]に保持したディレクトリ名から
     // model3.jsonのパスを決定する。
     // ディレクトリ名とmodel3.jsonの名前を一致させておくこと。
-    const model: string = LAppDefine.ModelDir[index];
+    const model: string = name;
     const modelPath: string = LAppDefine.ResourcesPath + model + '/';
-    let modelJsonName: string = LAppDefine.ModelDir[index];
-    modelJsonName += '.model3.json';
+    let modelJsonName: string = "model.model3.json";
 
     this.releaseAllModel();
     this._models.pushBack(new LAppModel());
     this._models.at(0).loadAssets(modelPath, modelJsonName);
+  }
+  public addModel(name: string) {
+    const model: string = name;
+    const modelPath: string = LAppDefine.ResourcesPath + LAppDefine.ModelDir + model + '/';
+    let modelJsonName: string = "model.model3.json";
+    this._models.pushBack(new LAppModel());
+    const index = this._models._size - 1;
+    this._models.at(index).loadAssets(modelPath, modelJsonName);
+    this._models.at(index)._hidden = true;
+
   }
 
   public setViewMatrix(m: CubismMatrix44) {
@@ -201,18 +241,62 @@ export class LAppLive2DManager {
    * コンストラクタ
    */
   constructor() {
+
     this._viewMatrix = new CubismMatrix44();
+    this._textbox = new LAppTextBox();
+    this._textbox.hide();
+    this._fade = new LAppFade();
+    this._title = new LAppTitle();
     this._models = new csmVector<LAppModel>();
-    this._sceneIndex = 0;
-    this.changeScene(this._sceneIndex);
+    this._background = 0;
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("id")) {
+      console.log("No story id :(")
+      this._story = null;
+      return;
+    }
+    this._story = new LAppStory(params.get("id"), params.get("lan"));
+
+    this._music = new LAppAudioController(true);
+    this._voice = new LAppAudioController(false);
+    this._soundEffect = new LAppAudioController(false);
+    this._names = new LAppNames()
+
+    this._story.getCharacterIds().then(characters => {
+      characters.forEach(x =>
+        this.addModel(x)
+      )
+      this._names.GetNames();
+    }
+
+    )
+    this._story.getSprites().then(sprites =>{
+      sprites.forEach(sprite => {
+        LAppDelegate.getInstance()._view.addSprite(sprite);
+      });
+
+  })
+
+    this._languageIndex = 0;
+
   }
 
   _viewMatrix: CubismMatrix44; // モデル描画に用いるview行列
   _models: csmVector<LAppModel>; // モデルインスタンスのコンテナ
-  _sceneIndex: number; // 表示するシーンのインデックス値
+  _story: LAppStory;
+  _names: LAppNames;
+  _music: LAppAudioController;
+  _textbox: LAppTextBox;
+  _voice: LAppAudioController;
+  _soundEffect: LAppAudioController;
+  _title: LAppTitle;
+  _fade: LAppFade;
+  _languageIndex: number; // 表示するシーンのインデックス値
+  _background: number;
+
   // モーション再生終了のコールバック関数
   _finishedMotion = (self: ACubismMotion): void => {
-    LAppPal.printMessage('Motion Finished:');
-    console.log(self);
+    //LAppPal.printMessage('Motion Finished:');
+    //console.log(self);
   };
 }

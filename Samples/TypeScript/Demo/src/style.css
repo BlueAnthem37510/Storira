@@ -1,0 +1,151 @@
+:root{
+    --name-height: 7vh;
+    --text-box-colour: rgba(255, 255, 255, 0.9);
+}
+@font-face {
+  font-family: Noto;
+  src: url(".\Noto_Sans_JP\NotoSansJP-VariableFont_wght.ttf");
+}
+
+html, body {
+    margin: 0;
+    overflow: hidden;
+    user-select: none;
+    font-family: Noto, Arial, Helvetica, sans-serif;
+    font-size: 4vh;
+    font-weight: bold;
+}
+canvas {
+    width: 100vw;
+    height: 100vh;
+    display: block;
+}
+#textboxcontainer{
+  width: 100vw;
+  position: fixed;
+  bottom: 0;
+
+
+}
+#textbox{
+  background-color: var(--text-box-colour);
+  width: auto;
+  height: 18vh;
+  border-radius: 2vh;
+  margin: 3vh 3vw;
+  padding: 5vh 4vw 0vw 4vw;
+}
+
+#fade{
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  display: none;
+  background-color: black;
+}
+
+#title{
+
+  height: 22vh;
+
+}
+.centre, .prompt{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+#titleText{
+  font-size: 5vh;
+  white-space: nowrap;
+}
+#nameContainer{
+  width: 30vw;
+  position: absolute;
+
+  top: calc(-1*var(--name-height)/2);
+  left: 0;
+  margin: 3vh 3vw;
+  height: var(--name-height);
+
+}
+#nameBox, #colourBox{
+  width: inherit;
+  height: inherit;
+  border-radius: 1vh;
+  position: absolute;
+  left:-1vh;
+  line-height: var(--name-height);
+  overflow: hidden;
+}
+#nameBox{
+  background-color: white;
+  z-index: 1;
+  left:-2vh !important;
+  top:-1vh;
+}
+#nameText{
+  margin-left:2vw;
+  position: absolute;
+  white-space: nowrap;
+}
+
+#colourBox, .star{
+  background-color: gray;
+}
+
+.icons{
+  height: 7.5vh;
+  padding: 1vh 1vw;
+  position: absolute;
+  filter: opacity(0.9) invert(1);
+  cursor: pointer;
+  z-index: 2;
+}
+
+#languageselector{
+  right: 0;
+}
+#languageselection{
+  display: none;
+  position: absolute;
+
+}
+#storyselectorcontainer{
+  text-transform: capitalize;
+}
+#storyselectorcontainer p{
+  cursor: pointer;
+}
+.prompt{
+  text-align: center;
+  background-color: var(--text-box-colour);
+  border-radius: 2vh;
+  border: 2px lightgray solid;
+  padding: 1vh 1vw;
+  min-width: 33vw;
+  z-index: 2;
+  max-height: 80vh;
+  overflow: hidden;
+}
+.prompt li{
+  padding: 1vh;
+}
+.prompt li span{
+  cursor: pointer;
+}
+.prompt ul{
+  overflow: scroll;
+  max-height: 80vh;
+}
+ul{
+  list-style-type: none;
+  padding: 0;
+}
+.close{
+  cursor: pointer;
+  position: absolute;
+  top:0;
+  right: 0;
+  padding: 1vh 1vw;
+}
