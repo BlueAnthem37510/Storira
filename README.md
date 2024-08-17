@@ -5,6 +5,7 @@
 # Storira
 
 This project aims to recreate the story reader of Revue Starlight Re:Live for archival purposes.
+This project is not affiliated with Bushiroad, ATeam and any other original owners. All assets files are property of their original owners.
 
 ## License
 
