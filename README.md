@@ -1,31 +1,14 @@
-[English](README.md) / [日本語](README.ja.md)
+[English](README.md) 
 
 ---
 
-# Cubism Web Samples
+# Storira
 
-This is a sample implementation of an application that displays models output by Live2D Cubism Editor.
-
-It is used in conjunction with the Cubism Web Framework and Live2D Cubism Core.
-
+This project aims to recreate the story reader of Revue Starlight Re:Live for archival purposes.
 
 ## License
 
-Please check the [license](LICENSE.md) before using this SDK.
-
-
-## Notices
-
-Please check the [notices](NOTICE.md) before using this SDK.
-
-
-## Compatibility with Cubism 5 new features and previous Cubism SDK versions
-
-This SDK is compatible with Cubism 5.  
-For SDK compatibility with new features in Cubism 5 Editor, please refer to [here](https://docs.live2d.com/en/cubism-sdk-manual/cubism-5-new-functions/).  
-For compatibility with previous versions of Cubism SDK, please refer to [here](https://docs.live2d.com/en/cubism-sdk-manual/compatibility-with-cubism-5/).
-
-
+See here for the Cubism Web Samples license which this project uses as its base. [license](LICENSE.md) 
 
 ## Directory structure
 
@@ -123,24 +106,9 @@ Note: You can start the server for operation check by running the `serve` script
 
 ## Contributing
 
-There are many ways to contribute to the project: logging bugs, submitting pull requests on this GitHub, and reporting issues and making suggestions in Live2D Community.
+There are many ways to contribute to the project: logging bugs, submitting pull requests on this GitHub, and reporting issues, missing assets, and making suggestions.
 
 ### Forking And Pull Requests
 
-We very much appreciate your pull requests, whether they bring fixes, improvements, or even new features. Note, however, that the wrapper is designed to be as lightweight and shallow as possible and should therefore only be subject to bug fixes and memory/performance improvements. To keep the main repository as clean as possible, create a personal fork and feature branches there as needed.
+Any help is much appreciated!
 
-### Bugs
-
-We are regularly checking issue-reports and feature requests at Live2D Community. Before filing a bug report, please do a search in Live2D Community to see if the issue-report or feature request has already been posted. If you find your issue already exists, make relevant comments and add your reaction.
-
-### Suggestions
-
-We're also interested in your feedback for the future of the SDK. You can submit a suggestion or feature request at Live2D Community. To make this process more effective, we're asking that you include more information to help define them more clearly.
-
-
-## Forum
-
-If you want to suggest or ask questions about how to use the Cubism SDK between users, please use the forum.
-
-- [Live2D Creator's Forum](https://community.live2d.com/)
-- [Live2D 公式クリエイターズフォーラム (Japanese)](https://creatorsforum.live2d.com/)
