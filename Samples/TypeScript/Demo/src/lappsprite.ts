@@ -8,6 +8,7 @@
 import { canvas, gl } from './lappglmanager';
 import { TextureInfo } from './lapptexturemanager';
 import { LAppDelegate } from './lappdelegate';
+import { LAppScript } from './lappstory';
 
 /**
  * スプライトを実装するクラス
@@ -238,13 +239,19 @@ export class LAppSpriteContainer{
     _positionInfo:PositionSizer;
     _sprite:LAppSprite;
     _textureInfo:TextureInfo;
+    _position: number;
     constructor(generator : PositionSizer, path:string){
       this._positionInfo = generator;
       this._itemId = null;
       this._visible = true;
       this._sprite =  null;
       this._path = path;
-
+      this._position = null
+    }
+    public showScript(script :LAppScript){
+      this._position = script.getModelPosition();
+      this._visible = true;
+      this.generateSprite();
     }
     public show(){
       this._visible = true;
@@ -256,7 +263,15 @@ export class LAppSpriteContainer{
 
       const callback = (textureInfo : TextureInfo) => {
         const positionInfo = this._positionInfo(textureInfo);
-        this._sprite = new LAppSprite(positionInfo.x, positionInfo.y, positionInfo.width, positionInfo.height,textureInfo.id);
+        let x :number
+        if(this._position == null){
+          x = positionInfo.x
+        }
+        else{
+          const canvas = document.getElementsByTagName("canvas")[0] as HTMLCanvasElement;
+          x = canvas.width*((0.25*(this._position)) - 0.25) //TODO: this is not quite correct
+        }
+        this._sprite = new LAppSprite(x, positionInfo.y, positionInfo.width, positionInfo.height, textureInfo.id);
       };
 
       textureManager.createTextureFromPngFile(

@@ -256,7 +256,12 @@ export class LAppLive2DManager {
       return;
     }
     this._story = new LAppStory(params.get("id"), params.get("lan"));
+    const index = params.get("index")
+    if(index){
+      const num = Number(index)
+      this._story._index = num;
 
+    }
     this._music = new LAppAudioController(true);
     this._voice = new LAppAudioController(false);
     this._soundEffect = new LAppAudioController(false);
@@ -274,6 +279,11 @@ export class LAppLive2DManager {
       sprites.forEach(sprite => {
         LAppDelegate.getInstance()._view.addSprite(sprite);
       });
+    this._story.getCgs().then(cgs =>{
+      cgs.forEach(cg =>{
+        LAppDelegate.getInstance()._view.addCg(cg);
+      })
+    })
 
   })
 

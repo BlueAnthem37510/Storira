@@ -69,7 +69,8 @@ function messageCommand(script : LAppScript){
   manager._textbox.colour(LAppDefine.Colours.has(nameId) ?LAppDefine.Colours.get(nameId) : LAppDefine.DefaultColor)
   manager._voice.play(path)
   const speakerId  = script.getSpeackerIndex()
-  if(speakerId < 0) return
+  if(speakerId < 0 || speakerId >= manager._models._size) return
+
   manager._models.at(speakerId)._wavFileHandler.start(path, manager._voice._audio);
 }
 function showTitle(script :LAppScript){
@@ -87,15 +88,6 @@ function changeBackground(script:LAppScript){
     else{
       delegate._view.changeBackground(backgrounds[backgroundId]);
     }
-
-  })
-}
-function changeCG(script:LAppScript){
-  const manager = LAppLive2DManager.getInstance();
-  manager._story.getCgs().then(cgs => {
-    const cgId=  script.getBackgroundId();
-    const delegate = LAppDelegate.getInstance()
-      delegate._view.changeCg(cgs[cgId]);
 
   })
 }
@@ -128,9 +120,9 @@ export const Commands = new Map<LAppDefine.Commands, LAppCommand>([
   [LAppDefine.Commands.HideTextBox, new LAppCommand((script :LAppScript) => {new LAppTextBox().hide()}, true)],
   [LAppDefine.Commands.Message, new LAppCommand(messageCommand, false)],
   [LAppDefine.Commands.Title, new LAppCommand(showTitle, true)],
-  [LAppDefine.Commands.ShowCg, new LAppCommand(changeCG, true)],
-  [LAppDefine.Commands.HideCg, new LAppCommand((script :LAppScript) => {LAppDelegate.getInstance()._view._cg._visible =  false}, true)],
-  [LAppDefine.Commands.ShowSprite, new LAppCommand((script :LAppScript) => {LAppDelegate.getInstance()._view._sprites[script.getModelIndex()].show()}, true)],
+  [LAppDefine.Commands.ShowCg,  new LAppCommand((script :LAppScript) => {LAppDelegate.getInstance()._view._cgs[script.getModelIndex()].show()}, true)],
+  [LAppDefine.Commands.HideCg, new LAppCommand((script :LAppScript) => {LAppDelegate.getInstance()._view._cgs[script.getModelIndex()]._visible = false}, true)],
+  [LAppDefine.Commands.ShowSprite, new LAppCommand((script :LAppScript) => {LAppDelegate.getInstance()._view._sprites[script.getModelIndex()].showScript(script)}, true)],
   [LAppDefine.Commands.HideSprite, new LAppCommand((script :LAppScript) => {LAppDelegate.getInstance()._view._sprites[script.getModelIndex()]._visible = false}, true)],
 ])
 

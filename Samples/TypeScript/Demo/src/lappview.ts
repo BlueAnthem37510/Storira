@@ -42,12 +42,10 @@ export class LAppView {
       else{
         return new Position(x, y, height*1.25, height);
       }
-
     };
     this._back = new LAppSpriteContainer(getBackSize, LAppDefine.ResourcesPath + LAppDefine.BackgroundsDir);
     this._back._itemId = 0;
-    this._cg = new LAppSpriteContainer(getBackSize, LAppDefine.ResourcesPath + LAppDefine.CgDir);
-    this._cg._visible = false;
+    this._cgs = new Array<LAppSpriteContainer>();
     this._sprites = new Array<LAppSpriteContainer>();
     //this._languageSelector = null;
 
@@ -109,16 +107,19 @@ export class LAppView {
     this._touchManager = null;
     this._deviceToScreen = null;
 
-    this._cg._sprite.release();
-    this._cg = null;
     this._back._sprite.release();
     this._back = null;
 
     for (let i = 0; i  < this._sprites.length; i++) {
       this._sprites[i]._sprite.release() ;
       this._sprites[i] = null;
-
     }
+
+    for (let i = 0; i  < this._cgs.length; i++) {
+      this._cgs[i]._sprite.release() ;
+      this._cgs[i] = null;
+    }
+
     gl.deleteProgram(this._programId);
     this._programId = null;
   }
@@ -139,9 +140,10 @@ export class LAppView {
     if (this._back._sprite && this._back._visible) {
       this._back._sprite.render(this._programId);
     }
-    if (this._cg._sprite && this._cg._visible){
-      this._cg._sprite.render(this._programId);
-    }
+    this._cgs.forEach(cg => {
+      if(cg._sprite && cg._visible)
+        cg._sprite.render(this._programId);
+    });
 
     this._sprites.forEach(sprite => {
       if(sprite._sprite && sprite._visible)
@@ -154,9 +156,7 @@ export class LAppView {
     live2DManager.onUpdate();
 
   }
-  public clearCg(){
-    this._cg._visible = false;
-  }
+
   public hideBackground(){
     if(this._back._sprite){
       this._back._visible = false;
@@ -194,80 +194,65 @@ export class LAppView {
 
 
   }
-  public changeCg(cg: number){
-    this._cg._itemId = cg;
-    this._cg._visible = true;
-    this._cg.generateSprite();
-    /*if (cg == null) return;
-    const textureManager = LAppDelegate.getInstance().getTextureManager();
-    const resourcesPath = LAppDefine.ResourcesPath;
-    const imageName = LAppDefine.CgDir;
-    const width: number = canvas.width;
-    const height: number = canvas.height;
-    // 非同期なのでコールバック関数を作成
-    const initCgTexture = (textureInfo: TextureInfo): void => {
-      const x: number = width * 0.5;
-      const y: number = height * 0.5;
-      //4:3
-      if(width*0.75 > height){
-        this._cg = new LAppSprite(x, y, width, width*0.75, textureInfo.id, cg);
-      }
-      else{
-        this._cg = new LAppSprite(x, y, height*1.25, height, textureInfo.id, cg);
-      }
-      this._cg._visible = false;
-    };
 
-  textureManager.createTextureFromPngFile(
-    resourcesPath + imageName + cg.toString()+ ".png",
-    false,
-    initCgTexture
-  );*/
 
+/**
+ * addCg
+  */
+public addCg(cg: number) {
+  const getBackSize = (textureInfo: TextureInfo): Position => {
+    const width = canvas.width;
+    const height = canvas.height;
+    const x: number = width * 0.5;
+    const y: number = height * 0.5;
+    //4:3
+    if(width*0.75 > height){
+      return new Position(x, y, width, width*0.75);
+    }
+    else{
+      return new Position(x, y, height*1.25, height);
+    }
+  };
+  const newCg =  new LAppSpriteContainer(getBackSize, LAppDefine.ResourcesPath + LAppDefine.CgDir);
+  newCg._itemId = cg;
+  newCg._visible = false;
+  newCg.generateSprite();
+  this._cgs.push(newCg);
 }
 /**
  * addSprite
  */
 public addSprite( sprite :number) {
-    for (let index = 0; index < this._sprites.length; index++) {
+    /*for (let index = 0; index < this._sprites.length; index++) {
       const element = this._sprites[index];
       if(element._itemId == sprite){
-        this._sprites[index]._visible = true;
+        this._sprites[index]._visible = false;
         element.generateSprite();
         return;
       }
-    }
+    }*/
     const spriteSize = (textureInfo: TextureInfo): Position => {
       const width = canvas.width;
-      const height = canvas.height * 0.9;
+      let height = canvas.height;
       const imgHeight  =textureInfo.img.naturalHeight;
       const imgWidth =textureInfo.img.naturalWidth;
       const ratio:number = imgHeight > imgWidth ? imgWidth/imgHeight : imgHeight/imgWidth;
-      return new Position(width * 0.5, height*0.5, height*ratio, height);
 
+
+      if(imgHeight == 850){ //people sprites act different than kirin/black chorus. Unsure how else to differentiate them at the moment
+        height = height*1.25
+        return new Position(width * 0.5, height*0.5, height*ratio,height )
+      }
+      else{const ratio:number = imgHeight > imgWidth ? imgWidth/imgHeight : imgHeight/imgWidth;
+        return new Position(width * 0.5, height*0.5, height*ratio, height);
+      }
     };
     const newSprite =  new LAppSpriteContainer(spriteSize, LAppDefine.ResourcesPath + LAppDefine.SpritesDir);
     newSprite._itemId = sprite;
     newSprite._visible = false;
     newSprite.generateSprite();
     this._sprites.push(newSprite);
-    /*const width: number = canvas.width;
-    const height: number = canvas.height;
-    const textureManager = LAppDelegate.getInstance().getTextureManager();
-    const resourcesPath = LAppDefine.ResourcesPath;
-    const spritePath = LAppDefine.SpritesDir;
-    const initSprite = (textureInfo: TextureInfo): void => {
-      const x: number = width * 0.5;
-      const y: number = height * 0.5;
-      //4:3
 
-      this._sprites.push(new LAppSprite(x, y, textureInfo.img.naturalWidth, textureInfo.img.naturalHeight, textureInfo.id) )
-    };
-    textureManager.createTextureFromPngFile(
-      resourcesPath + spritePath + sprite.toString()+ ".png",
-      false,
-      initSprite
-    );*/
 }
   /**
    * 画像の初期化を行う。
@@ -282,7 +267,10 @@ public addSprite( sprite :number) {
     let imageName = '';
 
     this._back.generateSprite();
-    this._cg.generateSprite();
+    this._cgs.forEach(element => {
+      element.generateSprite();
+    });
+
     this._sprites.forEach(element => {
       element.generateSprite();
     });
@@ -404,7 +392,7 @@ public addSprite( sprite :number) {
   _viewMatrix: CubismViewMatrix; // viewMatrix
   _programId: WebGLProgram; // シェーダID
   _back: LAppSpriteContainer; // 背景画像
-  _cg: LAppSpriteContainer;
+  _cgs: Array<LAppSpriteContainer>;
   _sprites: Array<LAppSpriteContainer>;
   //_languageSelector: LAppSprite; // 背景画像
   _changeModel: boolean; // モデル切り替えフラグ
