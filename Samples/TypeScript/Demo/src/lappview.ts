@@ -166,33 +166,6 @@ export class LAppView {
       this._back._itemId = background;
       this._back._visible = true;
       this._back.generateSprite();
-      /*if (background == null) return;
-      const textureManager = LAppDelegate.getInstance().getTextureManager();
-      const resourcesPath = LAppDefine.ResourcesPath;
-      const imageName = LAppDefine.BackgroundsDir;
-      const width: number = canvas.width;
-      const height: number = canvas.height;
-      // 非同期なのでコールバック関数を作成
-      //const initBackGroundTexture = (textureInfo: TextureInfo): void => {
-      /* const x: number = width * 0.5;
-        const y: number = height * 0.5;
-        //4:3
-        if(width*0.75 > height){
-          this._back = new LAppSprite(x, y, width, width*0.75, textureInfo.id, background);
-        }
-        else{
-          this._back = new LAppSprite(x, y, height*1.25, height, textureInfo.id, background);
-        }
-
-      };
-
-    textureManager.createTextureFromPngFile(
-      resourcesPath + imageName + background.toString()+ ".png",
-      false,
-      initBackGroundTexture
-    );*/
-
-
   }
 
 
@@ -215,22 +188,14 @@ public addCg(cg: number) {
   };
   const newCg =  new LAppSpriteContainer(getBackSize, LAppDefine.ResourcesPath + LAppDefine.CgDir);
   newCg._itemId = cg;
-  newCg._visible = false;
   newCg.generateSprite();
+  newCg._visible = false;
   this._cgs.push(newCg);
 }
 /**
  * addSprite
  */
 public addSprite( sprite :number) {
-    /*for (let index = 0; index < this._sprites.length; index++) {
-      const element = this._sprites[index];
-      if(element._itemId == sprite){
-        this._sprites[index]._visible = false;
-        element.generateSprite();
-        return;
-      }
-    }*/
     const spriteSize = (textureInfo: TextureInfo): Position => {
       const width = canvas.width;
       let height = canvas.height;
@@ -249,8 +214,8 @@ public addSprite( sprite :number) {
     };
     const newSprite =  new LAppSpriteContainer(spriteSize, LAppDefine.ResourcesPath + LAppDefine.SpritesDir);
     newSprite._itemId = sprite;
-    newSprite._visible = false;
     newSprite.generateSprite();
+    newSprite._visible = false;
     this._sprites.push(newSprite);
 
 }
@@ -338,15 +303,7 @@ public addSprite( sprite :number) {
       }
       live2DManager.onTap(x, y);
 
-      // 歯車にタップしたか
-      //if (
-      //  this._languageSelector.isHit(
-      //    pointX * window.devicePixelRatio,
-      //    pointY * window.devicePixelRatio
-      //  )
-      //) {
-      //  live2DManager.changeLanguage();
-      // }
+
     }
   }
 
@@ -394,7 +351,6 @@ public addSprite( sprite :number) {
   _back: LAppSpriteContainer; // 背景画像
   _cgs: Array<LAppSpriteContainer>;
   _sprites: Array<LAppSpriteContainer>;
-  //_languageSelector: LAppSprite; // 背景画像
   _changeModel: boolean; // モデル切り替えフラグ
   _isClick: boolean; // クリック中
 

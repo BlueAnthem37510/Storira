@@ -269,7 +269,7 @@ export class LAppSpriteContainer{
         }
         else{
           const canvas = document.getElementsByTagName("canvas")[0] as HTMLCanvasElement;
-          x = canvas.width*((0.25*(this._position)) - 0.25) //TODO: this is not quite correct
+          x = canvas.width*((0.125*(this._position+1))) //TODO: this is not quite correct...
         }
         this._sprite = new LAppSprite(x, positionInfo.y, positionInfo.width, positionInfo.height, textureInfo.id);
       };

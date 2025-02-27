@@ -53,7 +53,7 @@ export class LAppTextureManager {
       ite.notEqual(this._textures.end());
       ite.preIncrement()
     ) {
-     
+
       if (
         ite.ptr().fileName == fileName &&
         ite.ptr().usePremultply == usePremultiply
@@ -67,9 +67,9 @@ export class LAppTextureManager {
           .img.addEventListener('load', (): void => callback(ite.ptr()), {
             passive: true
           });
-      
+
         ite.ptr().img.src = fileName;
-        
+
         return;
       }
     }
@@ -97,7 +97,7 @@ export class LAppTextureManager {
         if (usePremultiply) {
           gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
         }
-    
+
         // テクスチャにピクセルを書き込む
         gl.texImage2D(
           gl.TEXTURE_2D,
